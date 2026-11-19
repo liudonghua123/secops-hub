@@ -1,0 +1,171 @@
+import { useEffect, useState } from "react";
+import { NavLink, Route, Routes, useNavigate } from "react-router-dom";
+import { api, clearAuth, getStoredUser } from "./api.js";
+import Dashboard from "./pages/Dashboard.jsx";
+import Assets from "./pages/Assets.jsx";
+import Vulns from "./pages/Vulns.jsx";
+import Intel from "./pages/Intel.jsx";
+import Scans from "./pages/Scans.jsx";
+import AIChat from "./pages/AIChat.jsx";
+import Agents from "./pages/Agents.jsx";
+import AgentChat from "./pages/AgentChat.jsx";
+import Mcp from "./pages/Mcp.jsx";
+import Skills from "./pages/Skills.jsx";
+import Kb from "./pages/Kb.jsx";
+import Login from "./pages/Login.jsx";
+import Alerts from "./pages/Alerts.jsx";
+import Users from "./pages/Users.jsx";
+
+const ICONS = {
+  dashboard: <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2"><rect x="3" y="3" width="7" height="9" rx="1"/><rect x="14" y="3" width="7" height="5" rx="1"/><rect x="14" y="12" width="7" height="9" rx="1"/><rect x="3" y="16" width="7" height="5" rx="1"/></svg>,
+  assets: <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2"><rect x="2" y="6" width="20" height="12" rx="2"/><path d="M6 10h4M6 14h8"/></svg>,
+  vulns: <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2"><path d="M12 3l9 4v5c0 5-3.8 8.4-9 9-5.2-.6-9-4-9-9V7z"/><path d="M12 9v4M12 16v.5"/></svg>,
+  intel: <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2"><circle cx="12" cy="12" r="9"/><circle cx="12" cy="12" r="4"/><circle cx="12" cy="12" r="0.5"/></svg>,
+  scans: <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2"><circle cx="11" cy="11" r="7"/><path d="M21 21l-4.3-4.3"/></svg>,
+  ai: <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2"><rect x="4" y="7" width="16" height="11" rx="3"/><path d="M12 7V4M8 12h.5M15.5 12h.5M9 15h6"/></svg>,
+  agents: <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2"><circle cx="6" cy="6" r="3"/><circle cx="18" cy="6" r="3"/><circle cx="12" cy="18" r="3"/><path d="M6 9v3a3 3 0 003 3h6a3 3 0 003-3V9M9 15l-1.5 3M15 15l1.5 3"/></svg>,
+  mcp: <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2"><rect x="3" y="4" width="18" height="7" rx="2"/><rect x="3" y="13" width="18" height="7" rx="2"/><path d="M7 7.5h.5M7 16.5h.5"/></svg>,
+  skills: <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2"><path d="M4 7l8-4 8 4-8 4z"/><path d="M4 12l8 4 8-4M4 17l8 4 8-4"/></svg>,
+  kb: <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2"><path d="M4 19V5a2 2 0 012-2h13v18H6a2 2 0 01-2-2zM8 7h8M8 11h8M8 15h5"/></svg>,
+  bell: <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2"><path d="M18 9a6 6 0 10-12 0c0 6-2 7-2 7h16s-2-1-2-7M10.3 20a2 2 0 003.4 0"/></svg>,
+  users: <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2"><circle cx="9" cy="8" r="3.5"/><path d="M2.5 20c0-3.6 2.9-6 6.5-6s6.5 2.4 6.5 6M16 4a3.5 3.5 0 010 7M21.5 20c0-2.8-1.8-4.8-4.3-5.6"/></svg>,
+};
+
+const NAV = [
+  { to: "/", label: "安全态势", icon: "dashboard" },
+  { to: "/assets", label: "资产管理", icon: "assets" },
+  { to: "/vulns", label: "漏洞库", icon: "vulns" },
+  { to: "/intel", label: "威胁情报", icon: "intel" },
+  { to: "/scans", label: "扫描任务", icon: "scans" },
+  { to: "/ai", label: "AI 值守助手", icon: "ai" },
+  { to: "/agents", label: "智能体", icon: "agents" },
+  { to: "/mcp", label: "MCP 管理", icon: "mcp" },
+  { to: "/skills", label: "Skills 管理", icon: "skills" },
+  { to: "/kb", label: "知识库", icon: "kb" },
+];
+
+const ROLE_LABEL = { admin: "管理员", analyst: "分析员", viewer: "只读" };
+
+export default function App() {
+  const [user, setUser] = useState(getStoredUser());
+  const [unread, setUnread] = useState(0);
+  const [alertOpen, setAlertOpen] = useState(false);
+  const [alerts, setAlerts] = useState([]);
+  const navigate = useNavigate();
+
+  // 401 时 api 层会广播此事件
+  useEffect(() => {
+    const onLogout = () => setUser(null);
+    window.addEventListener("secops:logout", onLogout);
+    return () => window.removeEventListener("secops:logout", onLogout);
+  }, []);
+
+  const loadAlerts = () => {
+    if (!user) return;
+    api.alerts().then((d) => {
+      setUnread(d.unread);
+      setAlerts(d.items);
+    }).catch(() => {});
+  };
+  useEffect(loadAlerts, [user]);
+  useEffect(() => {
+    if (!user) return;
+    const t = setInterval(loadAlerts, 60000);
+    return () => clearInterval(t);
+  }, [user]);
+
+  if (!user) return <Login onLogin={setUser} />;
+
+  const doLogout = async () => {
+    try { await api.logout(); } catch { /* ignore */ }
+    clearAuth();
+    setUser(null);
+  };
+
+  const markAll = async () => {
+    await api.markAlerts([], true);
+    loadAlerts();
+  };
+
+  return (
+    <>
+      <aside className="sidebar">
+        <div className="brand">
+          <div className="brand-logo">SH</div>
+          <div>
+            <div className="brand-title">SecOps Hub</div>
+            <div className="brand-sub">单位安全运营综合平台</div>
+          </div>
+        </div>
+        <nav className="nav">
+          {NAV.map((n) => (
+            <NavLink key={n.to} to={n.to} className={({ isActive }) => (isActive ? "active" : "")} end={n.to === "/"}>
+              {ICONS[n.icon]}
+              <span>{n.label}</span>
+            </NavLink>
+          ))}
+          {user.role === "admin" && (
+            <NavLink to="/users" className={({ isActive }) => (isActive ? "active" : "")}>
+              {ICONS.users}
+              <span>用户与权限</span>
+            </NavLink>
+          )}
+        </nav>
+        <div className="sidebar-foot">
+          数据仅限本单位授权范围使用<br />
+          扫描与处置动作需人工确认<br />
+          MCP 接口：/mcp (streamable HTTP)
+        </div>
+      </aside>
+      <main className="main">
+        <div className="topbar">
+          <button className="bell-btn" onClick={() => { setAlertOpen(!alertOpen); if (!alertOpen) loadAlerts(); }}>
+            {ICONS.bell}
+            {unread > 0 && <span className="bell-dot">{unread > 99 ? "99+" : unread}</span>}
+          </button>
+          {alertOpen && (
+            <div className="alert-pop card">
+              <div className="alert-pop-head">
+                <strong>预警中心</strong>
+                {unread > 0 && <button className="sm ghost" onClick={markAll}>全部已读</button>}
+              </div>
+              {alerts.length === 0 && <div className="page-desc" style={{ padding: "8px 4px" }}>暂无预警。高危/严重漏洞入库后会自动提醒。</div>}
+              {alerts.slice(0, 8).map((a) => (
+                <div key={a.id} className={`alert-item ${a.read ? "" : "unread"}`}>
+                  <span className={`tag tag-${a.level === "严重" ? "crit" : a.level === "高危" ? "high" : "mid"}`}>{a.level}</span>
+                  <div className="alert-item-body">
+                    <div className="li-title" style={{ cursor: a.ref_type === "vuln" ? "pointer" : "default" }}
+                         onClick={() => { if (a.ref_type === "vuln") { navigate(`/vulns?v=${a.ref_id}`); setAlertOpen(false); } }}>
+                      {a.title}
+                    </div>
+                    <div className="li-meta">{a.detail}</div>
+                  </div>
+                  {!a.read && <button className="sm ghost" onClick={() => api.markAlerts([a.id]).then(loadAlerts)}>已读</button>}
+                </div>
+              ))}
+            </div>
+          )}
+          <div className="user-chip">
+            <span className="user-name">{user.display_name}</span>
+            <span className="tag tag-info">{ROLE_LABEL[user.role] || user.role}</span>
+            <button className="sm ghost" onClick={doLogout}>退出</button>
+          </div>
+        </div>
+        <Routes>
+          <Route path="/" element={<Dashboard />} />
+          <Route path="/assets" element={<Assets />} />
+          <Route path="/vulns" element={<Vulns />} />
+          <Route path="/intel" element={<Intel />} />
+          <Route path="/scans" element={<Scans />} />
+          <Route path="/ai" element={<AIChat />} />
+          <Route path="/agents" element={<Agents />} />
+          <Route path="/agent-chat/:agentId" element={<AgentChat />} />
+          <Route path="/mcp" element={<Mcp />} />
+          <Route path="/skills" element={<Skills />} />
+          <Route path="/kb" element={<Kb />} />
+          <Route path="/users" element={<Users />} />
+        </Routes>
+      </main>
+    </>
+  );
+}

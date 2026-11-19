@@ -67,17 +67,23 @@ async def test_server(server_id: int, db: Session = Depends(get_db)):
     m = db.get(MCPServer, server_id)
     if not m:
         raise HTTPException(404, "not found")
-    from agentscope.mcp import HttpStatelessClient, StdIOStatefulClient
+    from agentscope.mcp import HttpMCPConfig, MCPClient, StdioMCPConfig
 
     client = None
     try:
         if m.transport == "stdio":
-            client = StdIOStatefulClient(name=m.name, command=m.command,
-                                         args=json.loads(m.args or "[]"))
+            client = MCPClient(
+                name=m.name, is_stateful=True,
+                mcp_config=StdioMCPConfig(
+                    command=m.command, args=json.loads(m.args or "[]")),
+            )
             await client.connect()
         else:
-            client = HttpStatelessClient(name=m.name, transport="streamable_http",
-                                         url=m.url, headers=json.loads(m.headers or "{}"))
+            client = MCPClient(
+                name=m.name, is_stateful=False,
+                mcp_config=HttpMCPConfig(
+                    url=m.url, headers=json.loads(m.headers or "{}")),
+            )
         tools = await client.list_tools()
         names = [t.name for t in (tools or [])]
         m.status, m.tool_count = "正常", len(names)

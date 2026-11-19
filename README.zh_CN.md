@@ -24,7 +24,7 @@
 
 ## 快速开始
 
-依赖：Python 3.10+（[uv](https://docs.astral.sh/uv/)）、Node 18+
+依赖：Python 3.11+（[uv](https://docs.astral.sh/uv/)）、Node 18+
 
 ```bash
 # 后端（8100 端口；MCP 在 http://127.0.0.1:8100/mcp）
@@ -69,8 +69,8 @@ export LLM_MODEL=qwen2.5:7b
 
 ### 已知事项
 
-- agentscope 1.0.21 与新版 openai SDK 存在一处流解析兼容问题（`ChoiceDelta.audio` 为 None 时崩溃），仓库已对 `agentscope/model/_openai_model.py` 打了 None 防护补丁；升级 agentscope 后若失效需重打。
-- 本机 mcp 生态版本组合：`mcp 1.30.0 + agentscope 1.0.21`，fastmcp 已移除（与 mcp 2.x/1.30 均不兼容），平台 MCP Server 使用 mcp SDK 内置 FastMCP。
+- 使用 **agentscope 2.x**（≥2.0.12，requires-python ≥3.11）+ **mcp 2.x**；平台 MCP Server 使用 mcp SDK 内置 `MCPServer`（mcp 2.x 中 FastMCP 已更名为 MCPServer）。agentscope 1.x 时代的手工补丁（audio None 防护、ToolResponse 包装）在 2.x 已不需要——v2 的 FunctionTool 自动将 str 返回值转换为 ToolChunk。
+- 平台侧 MCP 工具通过 `_ReadOnlyMCPClient` 标记为只读，agent 运行时自动放行（v2 权限引擎默认对非只读 MCP 工具要求人工确认）。
 - 自定义/Hub 技能代码由管理员上传后 exec 执行，请仅安装可信来源的技能包。
 
 ### MCP 客户端配置（Claude / WorkBuddy / Cursor 等）

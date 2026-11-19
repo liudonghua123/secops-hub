@@ -24,7 +24,7 @@ A comprehensive, self-hosted security operations platform for organizational (un
 
 ## Quick Start
 
-Requirements: Python 3.10+ ([uv](https://docs.astral.sh/uv/)), Node 18+
+Requirements: Python 3.11+ ([uv](https://docs.astral.sh/uv/)), Node 18+
 
 ```bash
 # Backend (port 8100; MCP at http://127.0.0.1:8100/mcp)
@@ -69,8 +69,8 @@ Point `SKILL_HUB_URL` at any static host serving `{HUB_URL}/index.json` plus ski
 
 ### Known notes
 
-- agentscope 1.0.21 has a stream-parsing bug with newer openai SDKs (`ChoiceDelta.audio` being None); a None-guard patch is applied to `agentscope/model/_openai_model.py` in the venv — reapply after upgrading agentscope.
-- Working ecosystem versions: `mcp 1.30.0 + agentscope 1.0.21`; fastmcp was removed (incompatible with mcp 2.x and 1.30), the platform MCP server uses the FastMCP bundled in the mcp SDK.
+- Uses **agentscope 2.x** (>=2.0.12, requires-python >=3.11) + **mcp 2.x**; the platform MCP server uses the `MCPServer` bundled in the mcp SDK v2 (FastMCP was renamed in mcp 2.x). The agentscope 1.x hand patches (audio None guard, ToolResponse wrapping) are no longer needed — v2's FunctionTool auto-converts str returns to ToolChunk.
+- Platform-side MCP tools are marked read-only via `_ReadOnlyMCPClient` so the v2 permission engine auto-allows them (by default non-read-only MCP tools require user confirmation).
 - Custom/hub skill code is exec'd after admin upload — only install trusted skill packs.
 
 ### MCP client config (e.g. Claude Desktop / WorkBuddy)

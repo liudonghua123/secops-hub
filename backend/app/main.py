@@ -11,9 +11,10 @@ from fastapi.middleware.cors import CORSMiddleware
 from .seed import run_seed
 
 try:
-    from mcp.server.fastmcp import FastMCP  # noqa: F401
+    from mcp.server.mcpserver import MCPServer  # noqa: F401
     from .mcp_server import mcp as fmcp
-    mcp_app = fmcp.streamable_http_app()
+    # path="/" so that mounting at /mcp serves POST /mcp (redirect-free)
+    mcp_app = fmcp.streamable_http_app(streamable_http_path="/")
     HAS_MCP = True
 except Exception:  # mcp not installed or failed to init
     HAS_MCP = False

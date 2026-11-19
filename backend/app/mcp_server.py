@@ -1,15 +1,15 @@
-"""MCP Server (fastmcp, streamable HTTP) mounted at /mcp on the same port.
+"""MCP Server (mcp SDK v2 MCPServer, streamable HTTP) mounted at /mcp on the same port.
 
 Exposes SecOps Hub data to external AI clients (Claude / Cursor / WorkBuddy...):
   - get_asset_profile(asset_name)   资产多维画像（借鉴 ARL-Next MCP 设计）
   - search_vulnerabilities(query)   漏洞库检索
   - latest_intel(limit)             最新威胁情报
 
-Implemented with the FastMCP server bundled in the `mcp` SDK (no fastmcp dep).
+Implemented with the MCPServer bundled in the `mcp` SDK v2 (no fastmcp dep).
 """
-from mcp.server.fastmcp import FastMCP
+from mcp.server.mcpserver import MCPServer
 
-mcp = FastMCP("secops-hub", streamable_http_path="/")
+mcp = MCPServer("secops-hub")
 
 
 @mcp.tool()

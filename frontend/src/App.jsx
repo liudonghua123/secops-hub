@@ -110,6 +110,7 @@ export default function App() {
   const [alertOpen, setAlertOpen] = useState(false);
   const [alerts, setAlerts] = useState([]);
   const [menuOpen, setMenuOpen] = useState(false);
+  const [showUserMenu, setShowUserMenu] = useState(false);
   const navigate = useNavigate();
   const t = useT();
 
@@ -224,12 +225,27 @@ export default function App() {
             </div>
           )}
           <div className="user-chip">
-            <span className="user-avatar">{(user.display_name || user.username || "?").slice(0, 1)}</span>
+            <button
+              className="user-avatar"
+              title={user.display_name}
+              onClick={() => { if (window.innerWidth <= 860) setShowUserMenu(!showUserMenu); }}
+            >
+              {(user.display_name || user.username || "?").slice(0, 1)}
+            </button>
             <span className="user-meta">
               <span className="user-name">{user.display_name}</span>
               <span className="user-role">{t("role." + user.role) || user.role}</span>
             </span>
-            <button className="sm ghost" onClick={doLogout}>{t("top.logout")}</button>
+            <button className="sm ghost logout-btn" onClick={doLogout}>{t("top.logout")}</button>
+            {showUserMenu && (
+              <div className="user-menu card">
+                <div className="user-menu-head">
+                  <div className="user-name">{user.display_name}</div>
+                  <div className="user-role">{t("role." + user.role) || user.role}</div>
+                </div>
+                <button className="sm ghost" onClick={doLogout}>{t("top.logout")}</button>
+              </div>
+            )}
           </div>
         </div>
         <Routes>

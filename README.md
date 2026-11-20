@@ -20,7 +20,8 @@ A comprehensive, self-hosted security operations platform for organizational (un
 | Agent Platform (AgentScope) | Create role-specific agents on the AgentScope ReActAgent runtime; each agent binds its own **MCP servers / skill packs / knowledge bases** and owns independent sessions with persisted messages |
 | MCP Management | Register third-party MCP servers (stdio / streamable-http), live connect test with tool listing |
 | Skills Management | Builtin skills (asset/vuln/intel queries, NVD sync, KB search) + third-party upload (python code defining `tool_*` functions) + **Skill Hub** (builtin demo catalog; set `SKILL_HUB_URL` for a remote hub, install/update supported) |
-| Knowledge Base | Multiple KBs, document upload (file/paste), auto chunking, retrieval preview; offline keyword retrieval — bound agents get a dedicated search tool |
+| Knowledge Base | Libraries with **folder trees** (playbook/directory organization), batch file upload & paste-to-add, auto chunking, retrieval preview; offline keyword retrieval — bound agents get a dedicated search tool |
+| UI | **i18n (zh/en, one-click toggle)**, **theme: auto / light / dark** (auto follows system), floating-island glass design, motion-first interactions, **mobile responsive** (sidebar drawer ≤860px, no overflow at 375px) |
 
 ## Quick Start
 

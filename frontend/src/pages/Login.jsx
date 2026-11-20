@@ -30,31 +30,36 @@ export default function Login({ onLogin }) {
 
   return (
     <div className="login-wrap">
-      <form className="login-island" onSubmit={submit}>
-        <div className="brand" style={{ justifyContent: "center", paddingBottom: 8 }}>
+      <div className="login-quote">
+        <blockquote>{t("login.quote")}</blockquote>
+        <div className="quote-by">{t("login.quoteBy")}</div>
+      </div>
+      <div className="login-island">
+        <div className="login-brand">
           <div className="brand-logo">SH</div>
-          <div>
-            <div className="brand-title">{t("app.name")}</div>
-            <div className="brand-sub">{t("app.sub")}</div>
-          </div>
+          <div className="brand-title">{t("app.name")}</div>
         </div>
-        <label className="login-field">
-          <span>{t("login.user")}</span>
-          <input value={username} onChange={(e) => setUsername(e.target.value)} autoFocus placeholder="admin" />
-        </label>
-        <label className="login-field">
-          <span>{t("login.pass")}</span>
-          <input type="password" value={password} onChange={(e) => setPassword(e.target.value)} placeholder="••••••••" />
-        </label>
-        {err && <div className="login-error">{err}</div>}
-        <button type="submit" disabled={busy} style={{ width: "100%", marginTop: 4 }}>
-          {busy ? t("login.doing") : t("login.title")}
-        </button>
+        <h1 className="login-title">{t("login.title")}</h1>
+        <div className="login-sub">{t("login.sub")}</div>
+        <form onSubmit={submit}>
+          <label className="login-field">
+            <span>{t("login.user")}</span>
+            <input value={username} onChange={(e) => setUsername(e.target.value)} autoFocus placeholder="admin" />
+          </label>
+          <label className="login-field">
+            <span>{t("login.pass")}</span>
+            <input type="password" value={password} onChange={(e) => setPassword(e.target.value)} placeholder="••••••••" />
+          </label>
+          {err && <div className="login-error">{err}</div>}
+          <button type="submit" disabled={busy} style={{ width: "100%" }}>
+            {busy ? t("login.doing") : t("login.title")}
+          </button>
+        </form>
         <div className="login-hint">
           {t("login.hint")}
           <br />{t("login.hint2")}
         </div>
-      </form>
+      </div>
     </div>
   );
 }

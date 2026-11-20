@@ -1,14 +1,37 @@
 import { useEffect, useState } from "react";
 import { Bar, BarChart, CartesianGrid, Cell, ResponsiveContainer, Tooltip, XAxis, YAxis } from "recharts";
 import { api } from "../api.js";
+import { useT } from "../i18n.js";
 
-const SEV_COLOR = { 严重: "#f85149", 高危: "#f0883e", 中危: "#d29922", 低危: "#3fb950" };
+// theme-aware chart colors (resolved from CSS vars at render time)
+function chartColors() {
+  const s = getComputedStyle(document.documentElement);
+  const v = (name, fb) => s.getPropertyValue(name).trim() || fb;
+  const dark = document.documentElement.dataset.theme === "dark";
+  return {
+    grid: v("--border", dark ? "rgba(255,255,255,0.1)" : "rgba(15,23,42,0.1)"),
+    axis: v("--muted-foreground", "#8b949e"),
+    bar: dark ? "#7aa5f6" : "#2f6fe4",
+    tooltipBg: dark ? "#1c2330" : "#ffffff",
+    tooltipBorder: dark ? "#2a3140" : "#e2e8f0",
+    tooltipText: dark ? "#e6edf3" : "#1a2233",
+  };
+}
 
 export default function Dashboard() {
+  const t = useT();
   const [stats, setStats] = useState(null);
   const [trend, setTrend] = useState([]);
   const [topRisks, setTopRisks] = useState([]);
   const [intel, setIntel] = useState([]);
+  const [theme, setThemeState] = useState(document.documentElement.dataset.theme);
+
+  // re-render on theme change so the chart re-resolves colors
+  useEffect(() => {
+    const ob = new MutationObserver(() => setThemeState(document.documentElement.dataset.theme));
+    ob.observe(document.documentElement, { attributes: true, attributeFilter: ["data-theme"] });
+    return () => ob.disconnect();
+  }, []);
 
   useEffect(() => {
     api.stats().then(setStats);
@@ -17,7 +40,8 @@ export default function Dashboard() {
     api.intel().then((d) => setIntel(d.slice(0, 6)));
   }, []);
 
-  if (!stats) return <div className="page-desc">加载中...</div>;
+  if (!stats) return <div className="page-desc">{t("c.loading")}</div>;
+  const cc = chartColors();
 
   const kpis = [
     { label: "资产总数", value: stats.asset_total, extra: `互联网暴露 ${stats.asset_exposed} 项` },
@@ -89,16 +113,16 @@ export default function Dashboard() {
         </div>
       </div>
 
-      <div className="card" style={{ marginTop: 14 }}>
-        <h3>漏洞披露趋势（按月）</h3>
+      <div className="card" style={{ marginTop: 0 }}>
+        <h3>{t("dash.trend")}</h3>
         <ResponsiveContainer width="100%" height={220}>
           <BarChart data={trend}>
-            <CartesianGrid strokeDasharray="3 3" stroke="#2a3140" />
-            <XAxis dataKey="month" stroke="#8b949e" fontSize={12} />
-            <YAxis stroke="#8b949e" fontSize={12} allowDecimals={false} />
-            <Tooltip contentStyle={{ background: "#1c2330", border: "1px solid #2a3140", color: "#e6edf3" }} />
-            <Bar dataKey="count" name="新增漏洞" radius={[4, 4, 0, 0]}>
-              {trend.map((e, i) => <Cell key={i} fill="#4f8ff7" />)}
+            <CartesianGrid strokeDasharray="3 3" stroke={cc.grid} vertical={false} />
+            <XAxis dataKey="month" stroke={cc.axis} fontSize={12} tickLine={false} />
+            <YAxis stroke={cc.axis} fontSize={12} allowDecimals={false} tickLine={false} axisLine={false} />
+            <Tooltip contentStyle={{ background: cc.tooltipBg, border: `1px solid ${cc.tooltipBorder}`, borderRadius: 10, color: cc.tooltipText, fontSize: 12 }} cursor={{ fill: cc.grid }} />
+            <Bar dataKey="count" name={t("dash.trendName")} radius={[4, 4, 0, 0]}>
+              {trend.map((e, i) => <Cell key={i} fill={cc.bar} />)}
             </Bar>
           </BarChart>
         </ResponsiveContainer>

@@ -18,6 +18,10 @@ const DICT = {
   "nav.skills": { zh: "Skills 管理", en: "Skills" },
   "nav.kb": { zh: "知识库", en: "Knowledge Base" },
   "nav.users": { zh: "用户与权限", en: "Users & Roles" },
+  "nav.group.overview": { zh: "总览", en: "Overview" },
+  "nav.group.operations": { zh: "安全运营", en: "Operations" },
+  "nav.group.intelligence": { zh: "智能与分析", en: "Intelligence" },
+  "nav.group.admin": { zh: "管理", en: "Administration" },
   "foot.notice": { zh: "数据仅限本单位授权范围使用", en: "Data is restricted to authorized use" },
   "foot.confirm": { zh: "扫描与处置动作需人工确认", en: "Scan & disposal need manual confirmation" },
   "foot.mcp": { zh: "MCP 接口：/mcp (streamable HTTP)", en: "MCP endpoint: /mcp (streamable HTTP)" },
@@ -42,6 +46,15 @@ const DICT = {
     en: "Default accounts: admin / Admin@2026 (Admin) · analyst / Analyst@2026 (Analyst) · viewer / Viewer@2026 (Read-only)",
   },
   "login.hint2": { zh: "首次登录后请立即修改密码", en: "Change the password right after first login" },
+  "login.sub": { zh: "输入用户名和密码登录平台", en: "Enter your username and password to sign in" },
+  "login.quote": {
+    zh: "「安全运营不是一次性工程，而是持续对抗的过程 —— 让资产、漏洞与情报在同一个平台上闭环。」",
+    en: '"Security operations is not a one-time effort but a continuous contest — assets, vulnerabilities and intel should close the loop on one platform."',
+  },
+  "login.quoteBy": { zh: "SecOps Hub 设计理念", en: "SecOps Hub design philosophy" },
+  "c.loading": { zh: "加载中…", en: "Loading…" },
+  "dash.trend": { zh: "漏洞披露趋势（按月）", en: "Vulnerability disclosure trend (monthly)" },
+  "dash.trendName": { zh: "新增漏洞", en: "New CVEs" },
 
   // ---- common ----
   "c.save": { zh: "保存", en: "Save" },

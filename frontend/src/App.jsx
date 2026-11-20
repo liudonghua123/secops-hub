@@ -1,5 +1,5 @@
 import { useEffect, useState } from "react";
-import { NavLink, Route, Routes, useNavigate } from "react-router-dom";
+import { NavLink, Route, Routes, useLocation, useNavigate } from "react-router-dom";
 import { api, clearAuth, getStoredUser } from "./api.js";
 import { setLang, useT } from "./i18n.js";
 import { useTheme } from "./theme.js";
@@ -34,25 +34,40 @@ const ICONS = {
   menu: <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2"><path d="M4 7h16M4 12h16M4 17h16"/></svg>,
   sun: <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2"><circle cx="12" cy="12" r="4"/><path d="M12 2v2M12 20v2M4.9 4.9l1.4 1.4M17.7 17.7l1.4 1.4M2 12h2M20 12h2M4.9 19.1l1.4-1.4M17.7 6.3l1.4-1.4"/></svg>,
   moon: <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2"><path d="M21 12.8A9 9 0 1111.2 3 7 7 0 0021 12.8z"/></svg>,
-  auto: <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2"><circle cx="12" cy="12" r="9"/><path d="M12 3v18M12 3a9 9 0 010 18" fill="currentColor" stroke="none" opacity="0.25"/><path d="M12 3a9 9 0 010 18"/></svg>,
+  monitor: <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2"><rect x="3" y="4" width="18" height="12" rx="2"/><path d="M8 20h8M12 16v4"/></svg>,
   globe: <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2"><circle cx="12" cy="12" r="9"/><path d="M3 12h18M12 3a15 15 0 010 18M12 3a15 15 0 000 18"/></svg>,
+  chevR: <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2"><path d="M9 6l6 6-6 6"/></svg>,
 };
 
-const NAV = [
-  { to: "/", key: "nav.dashboard", icon: "dashboard" },
-  { to: "/assets", key: "nav.assets", icon: "assets" },
-  { to: "/vulns", key: "nav.vulns", icon: "vulns" },
-  { to: "/intel", key: "nav.intel", icon: "intel" },
-  { to: "/scans", key: "nav.scans", icon: "scans" },
-  { to: "/ai", key: "nav.ai", icon: "ai" },
-  { to: "/agents", key: "nav.agents", icon: "agents" },
-  { to: "/mcp", key: "nav.mcp", icon: "mcp" },
-  { to: "/skills", key: "nav.skills", icon: "skills" },
-  { to: "/kb", key: "nav.kb", icon: "kb" },
+// shadcn-admin style grouped nav
+const NAV_GROUPS = [
+  {
+    titleKey: "nav.group.overview",
+    items: [{ to: "/", key: "nav.dashboard", icon: "dashboard" }],
+  },
+  {
+    titleKey: "nav.group.operations",
+    items: [
+      { to: "/assets", key: "nav.assets", icon: "assets" },
+      { to: "/vulns", key: "nav.vulns", icon: "vulns" },
+      { to: "/intel", key: "nav.intel", icon: "intel" },
+      { to: "/scans", key: "nav.scans", icon: "scans" },
+    ],
+  },
+  {
+    titleKey: "nav.group.intelligence",
+    items: [
+      { to: "/ai", key: "nav.ai", icon: "ai" },
+      { to: "/agents", key: "nav.agents", icon: "agents" },
+      { to: "/mcp", key: "nav.mcp", icon: "mcp" },
+      { to: "/skills", key: "nav.skills", icon: "skills" },
+      { to: "/kb", key: "nav.kb", icon: "kb" },
+    ],
+  },
 ];
 
 const THEME_ORDER = ["auto", "light", "dark"];
-const THEME_ICON = { auto: "auto", light: "sun", dark: "moon" };
+const THEME_ICON = { auto: "monitor", light: "sun", dark: "moon" };
 
 function ThemeToggle() {
   const [theme, setThemeState] = useTheme();
@@ -66,11 +81,26 @@ function ThemeToggle() {
 }
 
 function LangToggle() {
-  const t = useT();
   return (
     <button className="icon-btn" onClick={() => setLang(document.documentElement.lang.startsWith("zh") ? "en" : "zh")} title="中文 / English">
       {ICONS.globe}
     </button>
+  );
+}
+
+// breadcrumb from current route
+function Breadcrumb({ t }) {
+  const { pathname } = useLocation();
+  const flat = NAV_GROUPS.flatMap((g) => g.items);
+  const cur = flat.find((i) => i.to === pathname);
+  return (
+    <div className="breadcrumb">
+      <span className="crumb-root">{t("app.name")}</span>
+      {cur && <>
+        {ICONS.chevR}
+        <span className="crumb-current">{t(cur.key)}</span>
+      </>}
+    </div>
   );
 }
 
@@ -131,17 +161,25 @@ export default function App() {
           </div>
         </div>
         <nav className="nav" onClick={navClick}>
-          {NAV.map((n) => (
-            <NavLink key={n.to} to={n.to} className={({ isActive }) => (isActive ? "active" : "")} end={n.to === "/"}>
-              {ICONS[n.icon]}
-              <span>{t(n.key)}</span>
-            </NavLink>
+          {NAV_GROUPS.map((g) => (
+            <div key={g.titleKey}>
+              <div className="nav-group-title">{t(g.titleKey)}</div>
+              {g.items.map((n) => (
+                <NavLink key={n.to} to={n.to} className={({ isActive }) => (isActive ? "active" : "")} end={n.to === "/"}>
+                  {ICONS[n.icon]}
+                  <span>{t(n.key)}</span>
+                </NavLink>
+              ))}
+            </div>
           ))}
           {user.role === "admin" && (
-            <NavLink to="/users" className={({ isActive }) => (isActive ? "active" : "")}>
-              {ICONS.users}
-              <span>{t("nav.users")}</span>
-            </NavLink>
+            <>
+              <div className="nav-group-title">{t("nav.group.admin")}</div>
+              <NavLink to="/users" className={({ isActive }) => (isActive ? "active" : "")}>
+                {ICONS.users}
+                <span>{t("nav.users")}</span>
+              </NavLink>
+            </>
           )}
         </nav>
         <div className="sidebar-foot">
@@ -155,7 +193,8 @@ export default function App() {
           <button className="icon-btn sidebar-toggle" onClick={() => setMenuOpen(!menuOpen)} title={t("top.menu")}>
             {ICONS.menu}
           </button>
-          <div style={{ flex: 1 }} />
+          <Breadcrumb t={t} />
+          <div className="spacer" />
           <ThemeToggle />
           <LangToggle />
           <button className="bell-btn" onClick={() => { setAlertOpen(!alertOpen); if (!alertOpen) loadAlerts(); }}>
@@ -185,8 +224,11 @@ export default function App() {
             </div>
           )}
           <div className="user-chip">
-            <span className="user-name">{user.display_name}</span>
-            <span className="tag tag-info">{t("role." + user.role) || user.role}</span>
+            <span className="user-avatar">{(user.display_name || user.username || "?").slice(0, 1)}</span>
+            <span className="user-meta">
+              <span className="user-name">{user.display_name}</span>
+              <span className="user-role">{t("role." + user.role) || user.role}</span>
+            </span>
             <button className="sm ghost" onClick={doLogout}>{t("top.logout")}</button>
           </div>
         </div>

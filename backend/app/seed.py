@@ -80,8 +80,32 @@ FINDINGS = [
 ]
 
 
+_MIGRATE_COLUMNS = {
+    "knowledge_docs": [("folder", "VARCHAR(300) DEFAULT ''")],
+    "skills": [("file_path", "VARCHAR(300) DEFAULT ''")],
+}
+
+
+def _migrate_sqlite_columns():
+    """Add columns that post-date the first schema (idempotent)."""
+    from sqlalchemy import inspect, text
+    from .database import engine as _eng
+
+    inspector = inspect(_eng)
+    with _eng.begin() as conn:
+        for table, cols in _MIGRATE_COLUMNS.items():
+            if table not in inspector.get_table_names():
+                continue
+            existing = {c["name"] for c in inspector.get_columns(table)}
+            for col_name, col_def in cols:
+                if col_name not in existing:
+                    conn.execute(text(
+                        f"ALTER TABLE {table} ADD COLUMN {col_name} {col_def}"))
+
+
 def run_seed():
     Base.metadata.create_all(engine)
+    _migrate_sqlite_columns()
     from .skills_builtin import sync_builtin_skills
     sync_builtin_skills()
     db = SessionLocal()

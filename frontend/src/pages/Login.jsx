@@ -1,7 +1,9 @@
 import { useState } from "react";
 import { api, setAuth } from "../api.js";
+import { useT } from "../i18n.js";
 
 export default function Login({ onLogin }) {
+  const t = useT();
   const [username, setUsername] = useState("");
   const [password, setPassword] = useState("");
   const [err, setErr] = useState("");
@@ -11,7 +13,7 @@ export default function Login({ onLogin }) {
     e.preventDefault();
     setErr("");
     if (!username || !password) {
-      setErr("请输入用户名和密码");
+      setErr(t("login.need"));
       return;
     }
     setBusy(true);
@@ -20,7 +22,7 @@ export default function Login({ onLogin }) {
       setAuth(r.token, r.user);
       onLogin(r.user);
     } catch (ex) {
-      setErr(ex.message || "登录失败");
+      setErr(ex.message || "login failed");
     } finally {
       setBusy(false);
     }
@@ -32,25 +34,25 @@ export default function Login({ onLogin }) {
         <div className="brand" style={{ justifyContent: "center", paddingBottom: 8 }}>
           <div className="brand-logo">SH</div>
           <div>
-            <div className="brand-title">SecOps Hub</div>
-            <div className="brand-sub">单位安全运营综合平台</div>
+            <div className="brand-title">{t("app.name")}</div>
+            <div className="brand-sub">{t("app.sub")}</div>
           </div>
         </div>
         <label className="login-field">
-          <span>用户名</span>
+          <span>{t("login.user")}</span>
           <input value={username} onChange={(e) => setUsername(e.target.value)} autoFocus placeholder="admin" />
         </label>
         <label className="login-field">
-          <span>密码</span>
+          <span>{t("login.pass")}</span>
           <input type="password" value={password} onChange={(e) => setPassword(e.target.value)} placeholder="••••••••" />
         </label>
         {err && <div className="login-error">{err}</div>}
         <button type="submit" disabled={busy} style={{ width: "100%", marginTop: 4 }}>
-          {busy ? "登录中…" : "登录"}
+          {busy ? t("login.doing") : t("login.title")}
         </button>
         <div className="login-hint">
-          初始账号：admin / Admin@2026（管理员）· analyst / Analyst@2026（分析员）· viewer / Viewer@2026（只读）
-          <br />首次登录后请立即修改密码
+          {t("login.hint")}
+          <br />{t("login.hint2")}
         </div>
       </form>
     </div>

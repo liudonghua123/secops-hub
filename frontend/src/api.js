@@ -157,6 +157,9 @@ export const api = {
   testMcp: (id) => req(`/api/mcp/${id}/test`, { method: "POST" }),
   skills: () => req("/api/skills"),
   uploadSkill: (d) => req("/api/skills/upload", { method: "POST", body: JSON.stringify(d) }),
+  skillCode: (id) => req(`/api/skills/${id}/code`),
+  saveSkillCode: (id, code) =>
+    req(`/api/skills/${id}/code`, { method: "PUT", body: JSON.stringify({ code }) }),
   deleteSkill: (id) => req(`/api/skills/${id}`, { method: "DELETE" }),
   toggleSkill: (id) => req(`/api/skills/${id}/toggle`, { method: "PUT" }),
   hubIndex: () => req("/api/skills/hub"),
@@ -165,15 +168,25 @@ export const api = {
   createKb: (d) => req("/api/kb", { method: "POST", body: JSON.stringify(d) }),
   deleteKb: (id) => req(`/api/kb/${id}`, { method: "DELETE" }),
   kbDocs: (id) => req(`/api/kb/${id}/docs`),
+  createKbFolder: (id, path) =>
+    req(`/api/kb/${id}/folders`, { method: "POST", body: JSON.stringify({ path }) }),
+  deleteKbFolder: (id, path) =>
+    req(`/api/kb/${id}/folders?path=${encodeURIComponent(path)}`, { method: "DELETE" }),
   addKbDoc: (id, d) => req(`/api/kb/${id}/docs`, { method: "POST", body: JSON.stringify(d) }),
-  uploadKbDoc: (id, file) => {
+  uploadKbDocs: (id, files, folder = "") => {
     const fd = new FormData();
-    fd.append("file", file);
+    for (const f of files) fd.append("file", f);
+    if (folder) fd.append("folder", folder);
     const headers = {};
     const token = getToken();
     if (token) headers.Authorization = `Bearer ${token}`;
-    return fetch(`/api/kb/${id}/docs/upload`, { method: "POST", body: fd, headers }).then(async (r) => {
-      if (!r.ok) throw new ApiError(r.status, "上传失败");
+    return fetch(`/api/kb/${id}/docs/upload?folder=${encodeURIComponent(folder)}`, {
+      method: "POST", body: fd, headers,
+    }).then(async (r) => {
+      if (!r.ok) {
+        const b = await r.json().catch(() => ({}));
+        throw new ApiError(r.status, b.detail || "upload failed");
+      }
       return r.json();
     });
   },

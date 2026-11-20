@@ -113,7 +113,12 @@ class MCPServer(Base):
 
 
 class SkillItem(Base):
-    """Skill packs: builtin / uploaded custom / downloaded from hub."""
+    """Skill packs: builtin / uploaded custom / downloaded from hub.
+
+    Custom/hub skill code is persisted as a python file under
+    SKILLS_DIR (server-side, editable via API); ``code`` keeps the
+    current content as a mirror for fast exec.
+    """
     __tablename__ = "skills"
 
     id: Mapped[int] = mapped_column(Integer, primary_key=True, autoincrement=True)
@@ -121,7 +126,8 @@ class SkillItem(Base):
     version: Mapped[str] = mapped_column(String(30), default="1.0.0")
     source: Mapped[str] = mapped_column(String(20), default="builtin")  # builtin/custom/hub
     description: Mapped[str] = mapped_column(String(500), default="")
-    code: Mapped[str] = mapped_column(Text, default="")  # python 定义若干 @tool 函数
+    code: Mapped[str] = mapped_column(Text, default="")  # python 定义若干 tool_* 函数
+    file_path: Mapped[str] = mapped_column(String(300), default="")  # server-side skill file
     enabled: Mapped[bool] = mapped_column(Boolean, default=True)
     created_at: Mapped[datetime] = mapped_column(DateTime, default=utcnow)
     updated_at: Mapped[datetime] = mapped_column(DateTime, default=utcnow, onupdate=utcnow)
@@ -141,6 +147,7 @@ class KnowledgeDoc(Base):
 
     id: Mapped[int] = mapped_column(Integer, primary_key=True, autoincrement=True)
     kb_id: Mapped[int] = mapped_column(Integer, index=True)
+    folder: Mapped[str] = mapped_column(String(300), default="")  # 目录路径，如 "预案/网络" ；空为根
     filename: Mapped[str] = mapped_column(String(300))
     content: Mapped[str] = mapped_column(Text, default="")
     chunks: Mapped[str] = mapped_column(Text, default="[]")  # JSON list[str]

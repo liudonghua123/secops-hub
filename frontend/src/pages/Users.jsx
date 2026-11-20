@@ -10,8 +10,8 @@ export default function Users() {
   const [msg, setMsg] = useState("");
   const [err, setErr] = useState("");
 
-  const load = () => api.users().then(setUsers).catch((e) => setErr(e.message));
-  useEffect(load, []);
+  const load = () => { api.users().then(setUsers).catch((e) => setErr(e.message)); };
+  useEffect(() => { load(); }, []);
 
   const save = async () => {
     setErr(""); setMsg("");

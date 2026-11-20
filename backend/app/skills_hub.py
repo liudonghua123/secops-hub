@@ -93,7 +93,8 @@ def hub_index() -> dict:
 
 
 def install_from_hub(db: Session, name: str, manifest: dict) -> dict:
-    """Upsert a skill from a hub manifest."""
+    """Upsert a skill from a hub manifest (code mirrored to server file
+    by the router after commit)."""
     if not manifest.get("code"):
         return {"ok": False, "error": "manifest 缺少 code 字段"}
     row = db.query(SkillItem).filter(SkillItem.name == name).first()

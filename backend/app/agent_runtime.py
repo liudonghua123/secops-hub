@@ -262,7 +262,12 @@ async def build_agent(profile: AgentProfile, history: list[Msg]) -> tuple:
         react_config=ReActConfig(max_iters=profile.max_iters or 10),
     )
     if history:
-        agent.observe(history)
+        try:
+            r = agent.observe(history)
+            if inspect.iscoroutine(r):
+                await r
+        except Exception:
+            pass  # history seeding is best-effort
 
     async def cleanup():
         for c in stateful_clients:

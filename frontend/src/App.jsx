@@ -1,6 +1,8 @@
 import { useEffect, useState } from "react";
 import { NavLink, Route, Routes, useNavigate } from "react-router-dom";
 import { api, clearAuth, getStoredUser } from "./api.js";
+import { setLang, useT } from "./i18n.js";
+import { useTheme } from "./theme.js";
 import Dashboard from "./pages/Dashboard.jsx";
 import Assets from "./pages/Assets.jsx";
 import Vulns from "./pages/Vulns.jsx";
@@ -29,29 +31,57 @@ const ICONS = {
   kb: <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2"><path d="M4 19V5a2 2 0 012-2h13v18H6a2 2 0 01-2-2zM8 7h8M8 11h8M8 15h5"/></svg>,
   bell: <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2"><path d="M18 9a6 6 0 10-12 0c0 6-2 7-2 7h16s-2-1-2-7M10.3 20a2 2 0 003.4 0"/></svg>,
   users: <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2"><circle cx="9" cy="8" r="3.5"/><path d="M2.5 20c0-3.6 2.9-6 6.5-6s6.5 2.4 6.5 6M16 4a3.5 3.5 0 010 7M21.5 20c0-2.8-1.8-4.8-4.3-5.6"/></svg>,
+  menu: <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2"><path d="M4 7h16M4 12h16M4 17h16"/></svg>,
+  sun: <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2"><circle cx="12" cy="12" r="4"/><path d="M12 2v2M12 20v2M4.9 4.9l1.4 1.4M17.7 17.7l1.4 1.4M2 12h2M20 12h2M4.9 19.1l1.4-1.4M17.7 6.3l1.4-1.4"/></svg>,
+  moon: <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2"><path d="M21 12.8A9 9 0 1111.2 3 7 7 0 0021 12.8z"/></svg>,
+  auto: <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2"><circle cx="12" cy="12" r="9"/><path d="M12 3v18M12 3a9 9 0 010 18" fill="currentColor" stroke="none" opacity="0.25"/><path d="M12 3a9 9 0 010 18"/></svg>,
+  globe: <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2"><circle cx="12" cy="12" r="9"/><path d="M3 12h18M12 3a15 15 0 010 18M12 3a15 15 0 000 18"/></svg>,
 };
 
 const NAV = [
-  { to: "/", label: "安全态势", icon: "dashboard" },
-  { to: "/assets", label: "资产管理", icon: "assets" },
-  { to: "/vulns", label: "漏洞库", icon: "vulns" },
-  { to: "/intel", label: "威胁情报", icon: "intel" },
-  { to: "/scans", label: "扫描任务", icon: "scans" },
-  { to: "/ai", label: "AI 值守助手", icon: "ai" },
-  { to: "/agents", label: "智能体", icon: "agents" },
-  { to: "/mcp", label: "MCP 管理", icon: "mcp" },
-  { to: "/skills", label: "Skills 管理", icon: "skills" },
-  { to: "/kb", label: "知识库", icon: "kb" },
+  { to: "/", key: "nav.dashboard", icon: "dashboard" },
+  { to: "/assets", key: "nav.assets", icon: "assets" },
+  { to: "/vulns", key: "nav.vulns", icon: "vulns" },
+  { to: "/intel", key: "nav.intel", icon: "intel" },
+  { to: "/scans", key: "nav.scans", icon: "scans" },
+  { to: "/ai", key: "nav.ai", icon: "ai" },
+  { to: "/agents", key: "nav.agents", icon: "agents" },
+  { to: "/mcp", key: "nav.mcp", icon: "mcp" },
+  { to: "/skills", key: "nav.skills", icon: "skills" },
+  { to: "/kb", key: "nav.kb", icon: "kb" },
 ];
 
-const ROLE_LABEL = { admin: "管理员", analyst: "分析员", viewer: "只读" };
+const THEME_ORDER = ["auto", "light", "dark"];
+const THEME_ICON = { auto: "auto", light: "sun", dark: "moon" };
+
+function ThemeToggle() {
+  const [theme, setThemeState] = useTheme();
+  const t = useT();
+  const next = () => setThemeState(THEME_ORDER[(THEME_ORDER.indexOf(theme) + 1) % 3]);
+  return (
+    <button className="icon-btn" onClick={next} title={`${t("theme." + theme)} — ${t("theme.auto")}/${t("theme.light")}/${t("theme.dark")}`}>
+      {ICONS[THEME_ICON[theme]]}
+    </button>
+  );
+}
+
+function LangToggle() {
+  const t = useT();
+  return (
+    <button className="icon-btn" onClick={() => setLang(document.documentElement.lang.startsWith("zh") ? "en" : "zh")} title="中文 / English">
+      {ICONS.globe}
+    </button>
+  );
+}
 
 export default function App() {
   const [user, setUser] = useState(getStoredUser());
   const [unread, setUnread] = useState(0);
   const [alertOpen, setAlertOpen] = useState(false);
   const [alerts, setAlerts] = useState([]);
+  const [menuOpen, setMenuOpen] = useState(false);
   const navigate = useNavigate();
+  const t = useT();
 
   // 401 时 api 层会广播此事件
   useEffect(() => {
@@ -70,8 +100,8 @@ export default function App() {
   useEffect(loadAlerts, [user]);
   useEffect(() => {
     if (!user) return;
-    const t = setInterval(loadAlerts, 60000);
-    return () => clearInterval(t);
+    const iv = setInterval(loadAlerts, 60000);
+    return () => clearInterval(iv);
   }, [user]);
 
   if (!user) return <Login onLogin={setUser} />;
@@ -87,38 +117,47 @@ export default function App() {
     loadAlerts();
   };
 
+  const navClick = () => setMenuOpen(false);
+
   return (
     <>
-      <aside className="sidebar">
+      {menuOpen && <div className="drawer-mask" onClick={() => setMenuOpen(false)} style={{ zIndex: 49 }} />}
+      <aside className={`sidebar ${menuOpen ? "open" : ""}`}>
         <div className="brand">
           <div className="brand-logo">SH</div>
           <div>
-            <div className="brand-title">SecOps Hub</div>
-            <div className="brand-sub">单位安全运营综合平台</div>
+            <div className="brand-title">{t("app.name")}</div>
+            <div className="brand-sub">{t("app.sub")}</div>
           </div>
         </div>
-        <nav className="nav">
+        <nav className="nav" onClick={navClick}>
           {NAV.map((n) => (
             <NavLink key={n.to} to={n.to} className={({ isActive }) => (isActive ? "active" : "")} end={n.to === "/"}>
               {ICONS[n.icon]}
-              <span>{n.label}</span>
+              <span>{t(n.key)}</span>
             </NavLink>
           ))}
           {user.role === "admin" && (
             <NavLink to="/users" className={({ isActive }) => (isActive ? "active" : "")}>
               {ICONS.users}
-              <span>用户与权限</span>
+              <span>{t("nav.users")}</span>
             </NavLink>
           )}
         </nav>
         <div className="sidebar-foot">
-          数据仅限本单位授权范围使用<br />
-          扫描与处置动作需人工确认<br />
-          MCP 接口：/mcp (streamable HTTP)
+          {t("foot.notice")}<br />
+          {t("foot.confirm")}<br />
+          {t("foot.mcp")}
         </div>
       </aside>
       <main className="main">
         <div className="topbar">
+          <button className="icon-btn sidebar-toggle" onClick={() => setMenuOpen(!menuOpen)} title={t("top.menu")}>
+            {ICONS.menu}
+          </button>
+          <div style={{ flex: 1 }} />
+          <ThemeToggle />
+          <LangToggle />
           <button className="bell-btn" onClick={() => { setAlertOpen(!alertOpen); if (!alertOpen) loadAlerts(); }}>
             {ICONS.bell}
             {unread > 0 && <span className="bell-dot">{unread > 99 ? "99+" : unread}</span>}
@@ -126,10 +165,10 @@ export default function App() {
           {alertOpen && (
             <div className="alert-pop card">
               <div className="alert-pop-head">
-                <strong>预警中心</strong>
-                {unread > 0 && <button className="sm ghost" onClick={markAll}>全部已读</button>}
+                <strong>{t("top.alerts")}</strong>
+                {unread > 0 && <button className="sm ghost" onClick={markAll}>{t("top.markAll")}</button>}
               </div>
-              {alerts.length === 0 && <div className="page-desc" style={{ padding: "8px 4px" }}>暂无预警。高危/严重漏洞入库后会自动提醒。</div>}
+              {alerts.length === 0 && <div className="page-desc" style={{ padding: "8px 4px" }}>{t("top.noAlerts")}</div>}
               {alerts.slice(0, 8).map((a) => (
                 <div key={a.id} className={`alert-item ${a.read ? "" : "unread"}`}>
                   <span className={`tag tag-${a.level === "严重" ? "crit" : a.level === "高危" ? "high" : "mid"}`}>{a.level}</span>
@@ -140,15 +179,15 @@ export default function App() {
                     </div>
                     <div className="li-meta">{a.detail}</div>
                   </div>
-                  {!a.read && <button className="sm ghost" onClick={() => api.markAlerts([a.id]).then(loadAlerts)}>已读</button>}
+                  {!a.read && <button className="sm ghost" onClick={() => api.markAlerts([a.id]).then(loadAlerts)}>{t("top.read")}</button>}
                 </div>
               ))}
             </div>
           )}
           <div className="user-chip">
             <span className="user-name">{user.display_name}</span>
-            <span className="tag tag-info">{ROLE_LABEL[user.role] || user.role}</span>
-            <button className="sm ghost" onClick={doLogout}>退出</button>
+            <span className="tag tag-info">{t("role." + user.role) || user.role}</span>
+            <button className="sm ghost" onClick={doLogout}>{t("top.logout")}</button>
           </div>
         </div>
         <Routes>

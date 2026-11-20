@@ -21,7 +21,7 @@ A comprehensive, self-hosted security operations platform for organizational (un
 | MCP Management | Register third-party MCP servers (stdio / streamable-http), live connect test with tool listing |
 | Skills Management | Builtin skills (asset/vuln/intel queries, NVD sync, KB search) + third-party upload (python code defining `tool_*` functions) + **Skill Hub** (builtin demo catalog; set `SKILL_HUB_URL` for a remote hub, install/update supported) |
 | Knowledge Base | Libraries with **folder trees** (playbook/directory organization), batch file upload & paste-to-add, auto chunking, retrieval preview; offline keyword retrieval — bound agents get a dedicated search tool |
-| UI | **i18n (zh/en, one-click toggle)**, **theme: auto / light / dark** (auto follows system), floating-island glass design, motion-first interactions, **mobile responsive** (sidebar drawer ≤860px, no overflow at 375px) |
+| UI | **shadcn-admin style redesign**: shadcn/ui design tokens (oklch zinc palette, Inter, 0.625rem radius), **i18n (zh/en, one-click toggle)**, **theme: auto / light / dark** (auto follows system), grouped sidebar + breadcrumb header, split-screen login, mobile responsive |
 
 ## Quick Start
 

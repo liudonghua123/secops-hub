@@ -12,9 +12,28 @@ from .seed import run_seed
 
 try:
     from mcp.server.mcpserver import MCPServer  # noqa: F401
+    from mcp.server.transport_security import TransportSecuritySettings
     from .mcp_server import mcp as fmcp
     # path="/" so that mounting at /mcp serves POST /mcp (redirect-free)
-    mcp_app = fmcp.streamable_http_app(streamable_http_path="/")
+    # Allow tunnel/proxied hosts in the Host header (DNS rebinding protection kept on,
+    # with an explicit allowlist).
+    _allowed_hosts = [
+        h.strip()
+        for h in os.environ.get("MCP_ALLOWED_HOSTS", "127.0.0.1:8100,localhost:8100,secops-api.iman.qzz.io").split(",")
+        if h.strip()
+    ]
+    mcp_app = fmcp.streamable_http_app(
+        streamable_http_path="/",
+        transport_security=TransportSecuritySettings(
+            enable_dns_rebinding_protection=True,
+            allowed_hosts=_allowed_hosts,
+            allowed_origins=[
+                "https://secops-hub.iman.qzz.io",
+                "http://localhost:5290",
+                "http://127.0.0.1:5290",
+            ],
+        ),
+    )
     HAS_MCP = True
 except Exception:  # mcp not installed or failed to init
     HAS_MCP = False
@@ -63,7 +82,11 @@ app = FastAPI(title="SecOps Hub", version="0.5.0", lifespan=lifespan)
 
 app.add_middleware(
     CORSMiddleware,
-    allow_origins=["http://localhost:5173", "http://127.0.0.1:5173", "http://127.0.0.1:5290", "http://localhost:5290"],
+    allow_origins=[
+        "http://localhost:5173", "http://127.0.0.1:5173",
+        "http://localhost:5290", "http://127.0.0.1:5290",
+        "https://secops-hub.iman.qzz.io",
+    ],
     allow_credentials=True,
     allow_methods=["*"],
     allow_headers=["*"],
